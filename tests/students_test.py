@@ -1,3 +1,5 @@
+from core.models.assignments import AssignmentStateEnum
+
 def test_get_assignments_student_1(client, h_student_1):
     response = client.get(
         '/student/assignments',
@@ -28,7 +30,6 @@ def test_post_assignment_null_content(client, h_student_1):
     """
     failure case: content cannot be null
     """
-
     response = client.post(
         '/student/assignments',
         headers=h_student_1,
@@ -53,7 +54,7 @@ def test_post_assignment_student_1(client, h_student_1):
 
     data = response.json['data']
     assert data['content'] == content
-    assert data['state'] == 'DRAFT'
+    assert data['state'] == AssignmentStateEnum.DRAFT.value
     assert data['teacher_id'] is None
 
 
@@ -62,7 +63,7 @@ def test_submit_assignment_student_1(client, h_student_1):
         '/student/assignments/submit',
         headers=h_student_1,
         json={
-            'id': 2,
+            'id': 2,  # Ensure this ID exists in a draft state in your test environment
             'teacher_id': 2
         })
 
@@ -70,7 +71,7 @@ def test_submit_assignment_student_1(client, h_student_1):
 
     data = response.json['data']
     assert data['student_id'] == 1
-    assert data['state'] == 'SUBMITTED'
+    assert data['state'] == AssignmentStateEnum.SUBMITTED.value
     assert data['teacher_id'] == 2
 
 
@@ -79,7 +80,7 @@ def test_assignment_resubmit_error(client, h_student_1):
         '/student/assignments/submit',
         headers=h_student_1,
         json={
-            'id': 2,
+            'id': 2,  # Ensure this ID has already been submitted
             'teacher_id': 2
         })
     error_response = response.json

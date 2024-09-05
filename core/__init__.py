@@ -1,8 +1,8 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
+from flask_sqlalchemy import SQLAlchemy # type: ignore
+from flask_migrate import Migrate # type: ignore
+from sqlalchemy import event # type: ignore
+from sqlalchemy.engine import Engine # type: ignore
 from sqlite3 import Connection as SQLite3Connection
 
 app = Flask(__name__)

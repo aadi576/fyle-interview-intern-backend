@@ -1,4 +1,4 @@
-import pytest
+import pytest # type: ignore
 import json
 from tests import app
 

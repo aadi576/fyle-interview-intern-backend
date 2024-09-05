@@ -1,8 +1,7 @@
 import json
-from flask import request
+from flask import request, jsonify
 from core.libs import assertions
 from functools import wraps
-
 
 class AuthPrincipal:
     def __init__(self, user_id, student_id=None, teacher_id=None, principal_id=None):
@@ -11,36 +10,54 @@ class AuthPrincipal:
         self.teacher_id = teacher_id
         self.principal_id = principal_id
 
-
 def accept_payload(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        incoming_payload = request.json
+        try:
+            incoming_payload = request.json
+        except Exception as e:
+            return jsonify({'error': 'Invalid JSON payload', 'message': str(e)}), 400
         return func(incoming_payload, *args, **kwargs)
     return wrapper
-
 
 def authenticate_principal(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         p_str = request.headers.get('X-Principal')
-        assertions.assert_auth(p_str is not None, 'principal not found')
-        p_dict = json.loads(p_str)
+        if p_str is None:
+            return jsonify({'error': 'Principal not found'}), 401
+
+        try:
+            p_dict = json.loads(p_str)
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Invalid principal data'}), 400
+
+        # Extracting principal data safely
+        user_id = p_dict.get('user_id')
+        student_id = p_dict.get('student_id')
+        teacher_id = p_dict.get('teacher_id')
+        principal_id = p_dict.get('principal_id')
+
         p = AuthPrincipal(
-            user_id=p_dict['user_id'],
-            student_id=p_dict.get('student_id'),
-            teacher_id=p_dict.get('teacher_id'),
-            principal_id=p_dict.get('principal_id')
+            user_id=user_id,
+            student_id=student_id,
+            teacher_id=teacher_id,
+            principal_id=principal_id
         )
 
-        if request.path.startswith('/student'):
-            assertions.assert_true(p.student_id is not None, 'requester should be a student')
-        elif request.path.startswith('/teacher'):
-            assertions.assert_true(p.teacher_id is not None, 'requester should be a teacher')
-        elif request.path.startswith('/principal'):
-            assertions.assert_true(p.principal_id is not None, 'requester should be a principal')
+        # Validate principal based on path
+        path = request.path
+        if path.startswith('/student'):
+            if p.student_id is None:
+                return jsonify({'error': 'Requester should be a student'}), 403
+        elif path.startswith('/teacher'):
+            if p.teacher_id is None:
+                return jsonify({'error': 'Requester should be a teacher'}), 403
+        elif path.startswith('/principal'):
+            if p.principal_id is None:
+                return jsonify({'error': 'Requester should be a principal'}), 403
         else:
-            assertions.assert_found(None, 'No such api')
+            return jsonify({'error': 'No such API'}), 404
 
         return func(p, *args, **kwargs)
     return wrapper

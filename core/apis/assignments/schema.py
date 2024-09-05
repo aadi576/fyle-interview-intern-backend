@@ -1,6 +1,6 @@
-from marshmallow import Schema, EXCLUDE, fields, post_load
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from marshmallow_enum import EnumField
+from marshmallow import Schema, EXCLUDE, fields, post_load  # type: ignore
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field  # type: ignore
+from marshmallow_enum import EnumField  # type: ignore
 from core.models.assignments import Assignment, GradeEnum
 from core.libs.helpers import GeneralObject
 
@@ -20,7 +20,7 @@ class AssignmentSchema(SQLAlchemyAutoSchema):
     state = auto_field(dump_only=True)
 
     @post_load
-    def initiate_class(self, data_dict, many, partial):
+    def initiate_class(self, data_dict, many=None, partial=None):
         # pylint: disable=unused-argument,no-self-use
         return Assignment(**data_dict)
 
@@ -33,7 +33,7 @@ class AssignmentSubmitSchema(Schema):
     teacher_id = fields.Integer(required=True, allow_none=False)
 
     @post_load
-    def initiate_class(self, data_dict, many, partial):
+    def initiate_class(self, data_dict, many=None, partial=None):
         # pylint: disable=unused-argument,no-self-use
         return GeneralObject(**data_dict)
 
@@ -46,6 +46,6 @@ class AssignmentGradeSchema(Schema):
     grade = EnumField(GradeEnum, required=True, allow_none=False)
 
     @post_load
-    def initiate_class(self, data_dict, many, partial):
+    def initiate_class(self, data_dict, many=None, partial=None):
         # pylint: disable=unused-argument,no-self-use
         return GeneralObject(**data_dict)
